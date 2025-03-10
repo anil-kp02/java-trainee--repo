@@ -56,10 +56,29 @@ public class EmployeeServiceImpl implements EmployeeService {
 		return null;
 	}
 
-	@Override
+@Override
 	public EmployeeDto updateEmployee(EmployeeDto employeeDto) {
 		try {
-			Employee employee =employeeRepository.save(employeeDto.dtoToEntity());
+			
+			Employee employee = employeeRepository.getById(employeeDto.getId());
+			
+			/*
+			 * String updatedName = employeeDto.getName()!= null ? employeeDto.getName() :
+			 * employee.getName();
+			 * 
+			 * Integer updatedAge= employeeDto.getAge() != null ? employeeDto.getAge()
+			 * :employee.getAge();
+			 * 
+			 * String updatedUniqueUserId =employeeDto.getUniqueUserId()!=null ?
+			 * employeeDto.getUniqueUserId() : employee.getUniqueUserId();
+			 */
+			
+			Employee emp = new Employee(employeeDto.getId(),
+					employeeDto.getName()!= null ? employeeDto.getName() : employee.getName(),
+							employeeDto.getAge() != null ? employeeDto.getAge() :employee.getAge(),
+									employeeDto.getUniqueUserId()!=null ? employeeDto.getUniqueUserId() : employee.getUniqueUserId());
+			
+			EmployeeDto employeeSave =employeeRepository.save(emp).entityToDto();
 			
 			
 			if(employeeDto.getAddressDtos() != null && !employeeDto.getAddressDtos().isEmpty()) {
@@ -73,12 +92,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 			List<AddressDto> addresses = addressRepository.findAllByEmployeeId(employee.getId()).stream().
 					map(a->a.entityToDto()).collect(Collectors.toList());
 			
-			EmployeeDto  dto = employee.entityToDto();
-			dto.setAddressDtos(addresses);
+			
+			employeeSave.setAddressDtos(addresses);
 			
 			
 			
-			return dto;
+			return employeeSave;
 			
 		}catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -86,6 +105,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 		
 		return null;
 	}
+
 
 	
 	private static String generateUniqueId(Long id) {
