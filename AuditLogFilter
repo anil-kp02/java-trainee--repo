@@ -1,0 +1,52 @@
+
+@Component
+public class AuditLogFilter extends OncePerRequestFilter {
+	
+	@Autowired
+	private AuditLogService auditLogService;
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+
+		Long startTime = System.currentTimeMillis();
+
+//		String userName = "Anonymous";
+		UserDetail userDetails = SetObject.getUserDetailFromHttpRequest(request);
+//		if (userDetails.getName() != null) {
+//			userName = request.getUserPrincipal().getName();
+//		}
+					// if app run behind a proxy then
+					// x- forward for set by proxy and if it runs behind more than one proxy then 
+					// then all the proxy ips are separated by , to get the original client ip The first ip is the clients 
+		String ip = request.getHeader("X-Forwarded-For");
+		if (ip != null && ip.contains(",")) {
+			ip = ip.split(",")[0].trim();
+		}
+		if (ip == null) {
+					// it get the imidiate ip if run through proxy then 
+			ip = request.getRemoteAddr();
+		}
+
+		String uri = request.getRequestURI();
+		String method = request.getMethod();
+
+					// Use wrapper to get status after response
+		HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper(response);
+		
+		doFilter(request, responseWrapper, filterChain);
+
+		int httpStatus = responseWrapper.getStatus();
+		
+		if(httpStatus !=HttpStatus.NOT_FOUND.value()) {
+			// save to db 
+			AuditLogDto auditLogDto = new AuditLogDto(null,userDetails.getId(),ip,method,uri,httpStatus,
+					System.currentTimeMillis()-startTime,
+					new Date(startTime));
+			
+			auditLogService.addAudit(auditLogDto);
+		}
+
+	}
+
+}
