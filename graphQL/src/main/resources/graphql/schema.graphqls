@@ -1,0 +1,31 @@
+type Query{
+	books:[Book]
+	book(id: ID!) : Book
+	
+}
+
+
+type Mutation {
+  addReview(bookId: ID!, comment: String!, rating: Int!): Review
+    addAuthor(name: String!): Author
+ 	addBook(title: String!, authorId: ID!): Book
+}
+
+type Book {
+  id: ID!
+  title: String!
+  author: Author!
+  reviews: [Review]
+}
+
+type Author {
+  id: ID!
+  name: String!
+  books: [Book]
+}
+
+type Review {
+  id: ID!
+  comment: String!
+  rating: Int!
+}
